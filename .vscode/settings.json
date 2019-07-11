@@ -1,0 +1,12 @@
+{
+    "cSpell.words": [
+        "Popen",
+        "Rucio",
+        "gcert",
+        "globus",
+        "mkdir",
+        "pytest",
+        "ruciopylib"
+    ],
+    "python.testing.autoTestDiscoverOnSaveEnabled": false
+}
