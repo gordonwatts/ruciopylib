@@ -6,7 +6,8 @@
         "globus",
         "mkdir",
         "pytest",
-        "ruciopylib"
+        "ruciopylib",
+        "shutil"
     ],
     "python.testing.autoTestDiscoverOnSaveEnabled": false
 }

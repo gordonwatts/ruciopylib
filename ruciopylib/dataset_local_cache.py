@@ -60,9 +60,9 @@ class dataset_local_cache:
             os.mkdir(d)
         return d
 
-    def _get_filename(self, dirname, fname_stub):
+    def _get_filename(self, dirname, fname_stub, ext="pickle"):
         d = self._get_directory(dirname)
-        return "{d}/{fname_stub}.pickle".format(**locals())
+        return "{d}/{fname_stub}.{ext}".format(**locals())
 
     def save_listing (self, ds_listing: dataset_listing_info) -> None:
         'Save a listing to the cache'
@@ -76,6 +76,32 @@ class dataset_local_cache:
             return None
         with open(f_name, 'rb') as f:
             return pickle.load(f)
+
+    def mark_dataset_done(self, name:str) -> None:
+        '''
+        Marks a dataset as having been completely downloaded.
+
+        Arguments:
+            name:       Name of the dataset
+        '''
+        f_done = self._get_filename("done_downloading", name, ext="txt")
+        if not os.path.exists(f_done):
+            with open(f_done, 'r') as f:
+                f.write("Done\n")
+
+    def _check_dataset_done(self, name:str) -> bool:
+        '''
+        See if the dataset done mark exists
+
+        Arguments:
+            name:       Name of the dataset
+
+        Returns
+            True        The mark file is present
+            False       The mark file is not present.
+        '''
+        f_done = self._get_filename("done_downloading", name, ext="txt")
+        return os.path.exists(f_done)
 
     def get_ds_contents(self, name:str) -> Optional[List[str]]:
         '''
@@ -91,12 +117,16 @@ class dataset_local_cache:
                             dataset.
                         [] - Empty list if this dataset is known locally, but has no files.
         '''
+        # If the download isn't done.
+        if not self._check_dataset_done(name):
+            return None
+
         f_name = "{0}/{1}".format(self._loc, name)
         if not os.path.isdir(f_name):
             return None
+
+        # Find all the non-part files in the directory.
         result = []
-        # Need to make sure all the files that appear here are the same as the ones that we expect
-        raise BaseException("not implemented yet")
         for f in os.listdir(f_name):
             if not f.endswith(".part"):
                 result.append("{name}/{f}".format(**locals()))
