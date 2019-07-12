@@ -65,27 +65,6 @@ class rucio:
 
         return [RucioFile(m.group('file_name'), calc_size(m.group('size')), int(m.group('events'))) for m in [finder.match(l) for l in r.shell_output] if m is not None and (m.group('events') != 'EVENTS')]
 
-    def _status_in_progress(self, ds_name):
-        '''
-        Mark the status as in progress, and when it is done that it is no longer in progress.
-        '''
-        class status_adder:
-            def __init__(self, ds_name:str, status:status_mgr):
-                self._status = status
-                self._ds = ds_name
-
-            def __enter__(self):
-                old = self._status.status_value('rucio_download', 'downloading')
-                old = old if old is not None else []
-                old.append(self._ds)
-                self._status.save_status('rucio_download', {'downloading': old})
-
-            def __exit__(self, type, value, traceback):
-                old = self._status.status_value('rucio_download', 'downloading')
-                old.remove(self._ds)
-                self._status.save_status('rucio_download', {'downloading': old})
-        return status_adder(ds_name, self._status)
-
     def download_files(self, ds_name:str, data_dir:str, log_func = None) -> Optional[List[RucioFile]]:
         '''
         Download files in a dataset.
@@ -104,20 +83,19 @@ class rucio:
             Exception           If something went wrong that isn't either of the above  
                                 two (generally means this command needs to be retried).
         '''
-        with self._status_in_progress(ds_name):
-            r = self._runner.shell_execute("cd {data_dir}; rucio download {ds_name}".format(**locals()), log_func=log_func)
-            if r.shell_status:
-                pat = re.compile(r".*File (?P<file_name>\S+) successfully downloaded.*")
-                files = []
-                for l in r.shell_output:
-                    m = pat.match(l)
-                    if m:
-                        files.append(m.group("file_name"))
-                return files
-        
-            # We failed. Time to figure out why and return the proper type of error.
+        r = self._runner.shell_execute("cd {data_dir}; rucio download {ds_name}".format(**locals()), log_func=log_func)
+        if r.shell_status:
+            pat = re.compile(r".*File (?P<file_name>\S+) successfully downloaded.*")
+            files = []
             for l in r.shell_output:
-                print ("->" + l)
-            if any("Using main thread to download 0 file" in l for l in r.shell_output):
-                return None
-            raise RucioException("Rucio failed with exit code {0}.".format(r.shell_result))
+                m = pat.match(l)
+                if m:
+                    files.append(m.group("file_name"))
+            return files
+    
+        # We failed. Time to figure out why and return the proper type of error.
+        for l in r.shell_output:
+            print ("->" + l)
+        if any("Using main thread to download 0 file" in l for l in r.shell_output):
+            return None
+        raise RucioException("Rucio failed with exit code {0}.".format(r.shell_result))
