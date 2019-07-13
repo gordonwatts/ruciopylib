@@ -35,7 +35,6 @@ def rucio_2file_dataset(simple_dataset):
                 log_func('downloading ' + ds_name)
             self.CountCalledDL += 1
 
-
     return rucio_dummy(simple_dataset)
 
 @pytest.fixture()
