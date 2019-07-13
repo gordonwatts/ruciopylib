@@ -9,5 +9,11 @@
             "command": "pip wheel .",
             "problemMatcher": []
         }
+        {
+            "label": "Install Locally",
+            "type": "shell",
+            "command": "pip install .",
+            "problemMatcher": []
+        }
     ]
 }
