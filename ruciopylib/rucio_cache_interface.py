@@ -150,3 +150,5 @@ class rucio_cache_interface:
     def _rucio_download(self, ds_name:str, log_func) -> None:
         'Download the files synchronously - this could take a long time'
         self._rucio.download_files(ds_name, self._cache_mgr.get_download_directory(), log_func=log_func)
+        # If we make it through here, then we are really done!
+        self._cache_mgr.mark_dataset_done(ds_name)

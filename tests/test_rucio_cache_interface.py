@@ -134,6 +134,7 @@ def cache_empty():
         def __init__(self):
             self._ds_list = {}
             self._downloaded_ds = {}
+            self._done_ds = []
         
         def get_download_directory(self):
             return 'totally-bogus'
@@ -149,7 +150,12 @@ def cache_empty():
         def save_listing(self, ds_info):
             self._ds_list[ds_info.Name] = ds_info
 
+        def mark_dataset_done(self, name:str) -> None:
+            self._done_ds.append(name)
+
         def get_ds_contents(self, ds_name):
+            if ds_name not in self._done_ds:
+                return None
             if ds_name in self._downloaded_ds:
                 return [f.filename for f in self._downloaded_ds[ds_name].FileList]
             return None
@@ -321,6 +327,7 @@ def test_dataset_download_good(rucio_2file_dataset, cache_empty, simple_dataset)
     # Now, make sure that we get back what we want here.
     status, files = dm.download_ds(simple_dataset.Name)
     assert DatasetQueryStatus.results_valid == status
+    assert files is not None
     assert len(simple_dataset.FileList) == len(files)
 
     # Make sure we didn't re-query for this.
