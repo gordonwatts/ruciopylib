@@ -85,8 +85,10 @@ class dataset_local_cache:
             name:       Name of the dataset
         '''
         f_done = self._get_filename("done_downloading", name, ext="txt")
+        if not os.path.exists(os.path.basename(f_done)):
+            os.mkdir(os.path.basename(f_done))
         if not os.path.exists(f_done):
-            with open(f_done, 'r') as f:
+            with open(f_done, 'w') as f:
                 f.write("Done\n")
 
     def _check_dataset_done(self, name:str) -> bool:

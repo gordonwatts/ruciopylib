@@ -90,3 +90,9 @@ def test_ds_query_when_downloading(local_cache, simple_dataset):
     create_ds(simple_dataset, local_cache, write_done_file=False)
     r = local_cache.get_ds_contents(simple_dataset.Name)
     assert r is None
+
+def test_ds_query_marked_done(local_cache, simple_dataset):
+    create_ds(simple_dataset, local_cache, write_done_file=False)
+    local_cache.mark_dataset_done(simple_dataset.Name)
+    r = local_cache.get_ds_contents(simple_dataset.Name)
+    assert len(r) == 2
