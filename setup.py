@@ -12,7 +12,7 @@ with open("requirements.txt", 'r') as f:
 
 print (find_packages())
 setup(name="ruciopylib",
-    version='1.0.0-alpha.1',
+    version='1.0.0-alpha.2',
     packages=find_packages(exclude=['tests']),
     scripts=[],
     description="Python library to run the rucio client locally",

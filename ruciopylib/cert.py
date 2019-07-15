@@ -35,7 +35,7 @@ class cert:
         # Let the calling guy know how we did.
         return result.shell_status
 
-    def run_registration_loop(self, executor=None, sleep_func=None, quit_func=None):
+    def run_registration_loop(self, executor=None, sleep_func=None, quit_func=None, log_func=None):
         '''
         Re-run the registration in a loop - ever 11 hours by default. Please see the documentation
         for the function 'cert.register' for requirements on environment, etc.
@@ -48,6 +48,7 @@ class cert:
             sleep_fun       Function to do sleeping for 11 hours
             quit_func       Return true to gracefully exit from loop.
                             Checked just before registration is attempted.
+            log_func        function called with logging info.
 
         '''
         # Allow injection for sleep so we can dummy this out in a test.
@@ -62,7 +63,7 @@ class cert:
 
             # Try the registration.
             sleep=11*60*60
-            if not self.register():
+            if not self.register(log_func=log_func):
                 sleep = 5*60
             
             # Now, sleep.
