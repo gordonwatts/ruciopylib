@@ -1,11 +1,13 @@
 # Test out everything with datasets.
-
-from ruciopylib.rucio_cache_interface import rucio_cache_interface, DatasetQueryStatus
+from ruciopylib.rucio_cache_interface import rucio_cache_interface, DatasetQueryStatus, RucioAlreadyBeingDownloaded
 from ruciopylib.rucio import RucioException
 from tests.utils_for_tests import simple_dataset
 from time import sleep
 import datetime
 import os
+import asyncio
+import filelock
+import logging
 
 import pytest
 
@@ -74,7 +76,7 @@ def rucio_2file_dataset_take_time(simple_dataset):
 
         def download_files(self, ds_name, data_dir, log_func = None):
             self.DLCalled = True
-            sleep(0.005)
+            sleep(0.010)
             if self._cache_mgr is not None:
                 self._cache_mgr.add_ds(self._ds)
             self.CountCalledDL += 1
@@ -152,6 +154,9 @@ def cache_empty():
 
         def mark_dataset_done(self, name:str) -> None:
             self._done_ds.append(name)
+
+        def get_dataset_downloading_lock(self, name:str) -> None:
+            return filelock.SoftFileLock("./bogus.lock", 0)
 
         def get_ds_contents(self, ds_name):
             if ds_name not in self._done_ds:
@@ -387,3 +392,15 @@ def test_dataset_download_restart(rucio_do_nothing, rucio_2file_dataset, cache_e
     status, _ = dm.download_ds(simple_dataset.Name)
 
     assert DatasetQueryStatus.results_valid == status
+
+def test_two_downloads_fail(simple_dataset, cache_empty, rucio_do_nothing, rucio_2file_dataset):
+    dm = rucio_cache_interface(cache_empty, rucio_mgr=rucio_2file_dataset)
+
+    # Pretend to lock the dataset
+    with cache_empty.get_dataset_downloading_lock(simple_dataset.Name):
+        try:
+            logging.debug("Starting second download")
+            dm.download_ds(simple_dataset.Name)
+            assert False
+        except RucioAlreadyBeingDownloaded:
+            return

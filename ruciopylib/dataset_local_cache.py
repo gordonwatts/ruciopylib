@@ -2,13 +2,11 @@
 # - Contents of datasets
 # - What datasets we have
 #
-# TODO: Perhaps this is the wrong way around? We want this to work so that we have
-# multiple of these running. But one is "special" in that it has a rucio thing behind it
-# to fetch those?
 
 from datetime import datetime
 from ruciopylib.rucio import RucioFile
 from typing import List, Optional, Iterator
+import filelock
 import os
 import tempfile
 import json
@@ -90,6 +88,11 @@ class dataset_local_cache:
         if not os.path.exists(f_done):
             with open(f_done, 'w') as f:
                 f.write("Done\n")
+
+    def get_dataset_downloading_lock(self, ds_name:str) -> None:
+        'Returns a lock. Use in a with statement'
+        f_lock = self._get_filename('download_lock', ds_name, ext='lock')
+        return filelock.SoftFileLock(f_lock, 0)
 
     def _check_dataset_done(self, name:str) -> bool:
         '''

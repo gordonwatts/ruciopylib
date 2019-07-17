@@ -1,4 +1,4 @@
-# Test the grid certificate methods.
+# Test the grid certificate methods.import sys
 import sys
 sys.path.append(".")
 

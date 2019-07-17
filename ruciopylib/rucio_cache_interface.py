@@ -7,8 +7,14 @@ from enum import Enum
 from concurrent.futures import ThreadPoolExecutor, wait
 from time import sleep
 from retry.api import retry_call
+import filelock
 
 DatasetQueryStatus = Enum('DatasetQueryStatus', 'does_not_exist, query_queued, results_valid')
+
+class RucioAlreadyBeingDownloaded(BaseException):
+    'Thrown if you try to download a dataset that is already being downloaded by someone else'
+    def __init__ (self, msg):
+        BaseException.__init__(self, msg)
 
 def ds_age_too_old(age:datetime.datetime, time_valid:Optional[datetime.timedelta]):
     '''If current time is older than datetime plus timedelta.
@@ -103,10 +109,14 @@ class rucio_cache_interface:
         ds_name         The name of the dataset we should fetch
         '''
 
-        # Run the fetch of the result
-        r = self._rucio.get_file_listing(ds_name, log_func=log_func)
-        # Cache the result.
-        self._cache_mgr.save_listing(dataset_listing_info(ds_name, r))
+        try:
+            with self._cache_mgr.get_dataset_downloading_lock(ds_name):
+                # Run the fetch of the result
+                r = self._rucio.get_file_listing(ds_name, log_func=log_func)
+                # Cache the result.
+                self._cache_mgr.save_listing(dataset_listing_info(ds_name, r))
+        except filelock.Timeout:
+            raise RucioAlreadyBeingDownloaded(f'Cannot query rucio about contents of dataset as someone elase already has the lock for {ds_name}.')
 
     def download_ds(self, ds_name: str,
             do_download:bool=True,
@@ -149,6 +159,11 @@ class rucio_cache_interface:
 
     def _rucio_download(self, ds_name:str, log_func) -> None:
         'Download the files synchronously - this could take a long time'
-        self._rucio.download_files(ds_name, self._cache_mgr.get_download_directory(), log_func=log_func)
-        # If we make it through here, then we are really done!
-        self._cache_mgr.mark_dataset_done(ds_name)
+        # Make sure we are the only ones
+        try:
+            with self._cache_mgr.get_dataset_downloading_lock(ds_name):
+                self._rucio.download_files(ds_name, self._cache_mgr.get_download_directory(), log_func=log_func)
+                # If we make it through here, then we are really done!
+                self._cache_mgr.mark_dataset_done(ds_name)
+        except filelock.Timeout:
+            raise RucioAlreadyBeingDownloaded(f'Someone else has the lock file we need to download for {ds_name}.')

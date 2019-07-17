@@ -4,6 +4,7 @@ from ruciopylib.dataset_local_cache import dataset_local_cache, dataset_listing_
 from ruciopylib.rucio import RucioFile
 from tests.utils_for_tests import simple_dataset, nonexistant_dataset
 import pytest
+import filelock
 import tempfile
 import shutil
 import os
@@ -96,3 +97,17 @@ def test_ds_query_marked_done(local_cache, simple_dataset):
     local_cache.mark_dataset_done(simple_dataset.Name)
     r = local_cache.get_ds_contents(simple_dataset.Name)
     assert len(r) == 2
+
+def test_ds_mark_can(local_cache, simple_dataset):
+    'Can we mark it?'
+    with local_cache.get_dataset_downloading_lock(simple_dataset.Name):
+        assert True
+
+def test_ds_mark_lock_works(local_cache, simple_dataset):
+    'Can we mark it?'
+    try:
+        with local_cache.get_dataset_downloading_lock(simple_dataset.Name):
+            with local_cache.get_dataset_downloading_lock(simple_dataset.Name):
+                assert False
+    except filelock.Timeout:
+        return
