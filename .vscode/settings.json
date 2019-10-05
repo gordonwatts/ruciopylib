@@ -1,13 +1,36 @@
 {
     "cSpell.words": [
+        "DAOD",
+        "DIDs",
+        "EXOT",
+        "NNPDF",
         "Popen",
         "Rucio",
+        "VOMS",
+        "asyncio",
+        "bufsize",
+        "cern",
+        "dudewhereismysoda",
+        "fname",
         "gcert",
         "globus",
+        "gsiftp",
+        "isdir",
+        "lthigh",
+        "ltlow",
         "mkdir",
+        "noretry",
         "pytest",
+        "requery",
+        "rmtree",
         "ruciopylib",
-        "shutil"
+        "shutil",
+        "vomses"
     ],
-    "python.testing.autoTestDiscoverOnSaveEnabled": false
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--ignore=E501",
+        "--exclude=tests/*"
+    ]
 }

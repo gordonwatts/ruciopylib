@@ -4,11 +4,12 @@ from ruciopylib.runner import runner
 
 import time
 
+
 class cert:
     '''
     Drives registration of a grid certificate
     '''
-    def register(self, executor=None, log_func = None):
+    def register(self, executor=None, log_func=None):
         '''
         Attempt a single registration. This is done syncronsously, and might take a while
         to complete!
@@ -30,7 +31,7 @@ class cert:
         run = executor if executor is not None else runner()
 
         result = run.shell_execute('echo $GRID_PASSWORD | voms-proxy-init -voms $GRID_VOMS',
-                    lambda l: log_func(l) if log_func is not None else None)
+                                   lambda l: log_func(l) if log_func is not None else None)
 
         # Let the calling guy know how we did.
         return result.shell_status
@@ -62,9 +63,9 @@ class cert:
                     return
 
             # Try the registration.
-            sleep=11*60*60
+            sleep = 11 * 60 * 60
             if not self.register(log_func=log_func):
-                sleep = 5*60
-            
+                sleep = 5 * 60
+
             # Now, sleep.
             sleep_me(sleep)

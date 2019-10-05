@@ -230,7 +230,7 @@ def test_no_cert(rucio_no_cert):
 def test_logging(rucio_good_file_listing):
     r = rucio(executor = rucio_good_file_listing)
     lines = []
-    files = r.get_file_listing("mc16_13TeV:mc16_13TeV.311313.MadGraphPythia8EvtGen_A14NNPDF31LO_HSS_LLP_mH125_mS35_lthigh.deriv.DAOD_EXOT15.e7270_e5984_s3234_r10724_r10726_p3795", log_func=lambda l: lines.append(l))
+    _ = r.get_file_listing("mc16_13TeV:mc16_13TeV.311313.MadGraphPythia8EvtGen_A14NNPDF31LO_HSS_LLP_mH125_mS35_lthigh.deriv.DAOD_EXOT15.e7270_e5984_s3234_r10724_r10726_p3795", log_func=lambda l: lines.append(l))
     assert len(lines) == 21
 
 def test_download_good_ds(rucio_good_ds_download):

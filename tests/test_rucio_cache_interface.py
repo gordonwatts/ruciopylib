@@ -226,7 +226,7 @@ def test_look_for_good_dataset_that_fails_a_bunch(rucio_2file_dataset_with_fails
 
     # Now, make sure that we get back what we want and that the number of tries matches what we think
     # it should have.
-    status, files = dm.get_ds_contents(simple_dataset.Name)
+    status, _ = dm.get_ds_contents(simple_dataset.Name)
     assert DatasetQueryStatus.results_valid == status
     assert 5 == rucio_2file_dataset_with_fails.CountCalled
 
@@ -385,7 +385,7 @@ def test_dataset_download_restart(rucio_do_nothing, rucio_2file_dataset, cache_e
     rucio_2file_dataset._cache_mgr = cache_empty
 
     # Trigger the download on one.
-    dm0 = rucio_cache_interface(cache_empty, rucio_mgr=rucio_do_nothing)
+    _ = rucio_cache_interface(cache_empty, rucio_mgr=rucio_do_nothing)
 
     # Next, create a second one with the same cache.
     dm = rucio_cache_interface(cache_empty, rucio_mgr=rucio_2file_dataset)

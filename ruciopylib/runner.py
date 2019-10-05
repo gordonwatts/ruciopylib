@@ -2,13 +2,14 @@
 from collections import namedtuple
 from subprocess import Popen, PIPE, STDOUT
 
-exe_result = namedtuple('ExeResult','shell_result shell_status shell_output')
+exe_result = namedtuple('ExeResult', 'shell_result shell_status shell_output')
+
 
 class runner:
     def __init__(self):
         pass
-    
-    def shell_execute(self, shell_command, log_func = None) -> exe_result:
+
+    def shell_execute(self, shell_command, log_func=None) -> exe_result:
         '''
         Run in the default command shell, synchronously.
 
@@ -30,4 +31,4 @@ class runner:
                 if log_func is not None:
                     log_func(l_trim)
             p.wait()
-            return exe_result(p.returncode, p.returncode==0, lines)
+            return exe_result(p.returncode, p.returncode == 0, lines)

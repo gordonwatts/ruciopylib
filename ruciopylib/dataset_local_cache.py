@@ -5,18 +5,18 @@
 
 from datetime import datetime
 from ruciopylib.rucio import RucioFile
-from typing import List, Optional, Iterator
+from typing import List, Optional
 import filelock
 import os
 import tempfile
-import json
 import pickle
+
 
 class dataset_listing_info:
     '''
     Simple object that contains a list of files in the dataset
     '''
-    def __init__ (self, name: str, files: List[RucioFile], created_time: Optional[datetime]=None):
+    def __init__(self, name: str, files: List[RucioFile], created_time: Optional[datetime] = None):
         '''
         Initialize a dataset file listing.
 
@@ -27,6 +27,7 @@ class dataset_listing_info:
         self.Name = name
         self.Created = created_time if created_time is not None else datetime.now()
         self.FileList = files
+
 
 class dataset_local_cache:
     r'''
@@ -62,7 +63,7 @@ class dataset_local_cache:
         d = self._get_directory(dirname)
         return "{d}/{fname_stub}.{ext}".format(**locals())
 
-    def save_listing (self, ds_listing: dataset_listing_info) -> None:
+    def save_listing(self, ds_listing: dataset_listing_info) -> None:
         'Save a listing to the cache'
         with open(self._get_filename("cache", ds_listing.Name), 'wb') as f:
             pickle.dump(ds_listing, f)
@@ -75,7 +76,7 @@ class dataset_local_cache:
         with open(f_name, 'rb') as f:
             return pickle.load(f)
 
-    def mark_dataset_done(self, name:str) -> None:
+    def mark_dataset_done(self, name: str) -> None:
         '''
         Marks a dataset as having been completely downloaded.
 
@@ -89,12 +90,12 @@ class dataset_local_cache:
             with open(f_done, 'w') as f:
                 f.write("Done\n")
 
-    def get_dataset_downloading_lock(self, ds_name:str) -> None:
+    def get_dataset_downloading_lock(self, ds_name: str) -> None:
         'Returns a lock. Use in a with statement'
         f_lock = self._get_filename('download_lock', ds_name, ext='lock')
         return filelock.SoftFileLock(f_lock, 0)
 
-    def _check_dataset_done(self, name:str) -> bool:
+    def _check_dataset_done(self, name: str) -> bool:
         '''
         See if the dataset done mark exists
 
@@ -108,7 +109,7 @@ class dataset_local_cache:
         f_done = self._get_filename("done_downloading", name, ext="txt")
         return os.path.exists(f_done)
 
-    def get_ds_contents(self, name:str) -> Optional[List[str]]:
+    def get_ds_contents(self, name: str) -> Optional[List[str]]:
         '''
         Return the list of files in the current dataset
 

@@ -4,19 +4,20 @@ from ruciopylib.dataset_local_cache import dataset_local_cache, dataset_listing_
 from typing import List, Optional, Tuple
 import datetime
 from enum import Enum
-from concurrent.futures import ThreadPoolExecutor, wait
-from time import sleep
 from retry.api import retry_call
 import filelock
 
+
 DatasetQueryStatus = Enum('DatasetQueryStatus', 'does_not_exist, query_queued, results_valid')
+
 
 class RucioAlreadyBeingDownloaded(BaseException):
     'Thrown if you try to download a dataset that is already being downloaded by someone else'
-    def __init__ (self, msg):
+    def __init__(self, msg):
         BaseException.__init__(self, msg)
 
-def ds_age_too_old(age:datetime.datetime, time_valid:Optional[datetime.timedelta]):
+
+def ds_age_too_old(age: datetime.datetime, time_valid: Optional[datetime.timedelta]):
     '''If current time is older than datetime plus timedelta.
 
     Arguments
@@ -35,6 +36,7 @@ def ds_age_too_old(age:datetime.datetime, time_valid:Optional[datetime.timedelta
         return True
     return (datetime.datetime.now() + time_valid) <= age
 
+
 class rucio_cache_interface:
     r'''
     Manages getting rucio data into a local cache of data.
@@ -43,9 +45,9 @@ class rucio_cache_interface:
           cause undefined behavior. That rule must be enforced at a higher level than
           this code.
     '''
-    def __init__(self, data_mgr:dataset_local_cache, 
-            rucio_mgr: Optional[rucio] = None,
-            seconds_between_retries:float=60.0*5):
+    def __init__(self, data_mgr: dataset_local_cache,
+                 rucio_mgr: Optional[rucio] = None,
+                 seconds_between_retries: float = 60.0 * 5):
         '''
         Setup a dataset_mgr
 
@@ -59,13 +61,13 @@ class rucio_cache_interface:
         self._seconds_between_retries = seconds_between_retries
 
     def get_ds_contents(self, ds_name: str,
-            maxAge: Optional[datetime.timedelta] = None,
-            maxAgeIfNotSeen: Optional[datetime.timedelta] = datetime.timedelta(minutes=60),
-            log_func=None) -> Tuple[DatasetQueryStatus, Optional[List[RucioFile]]]:
+                        maxAge: Optional[datetime.timedelta] = None,
+                        maxAgeIfNotSeen: Optional[datetime.timedelta] = datetime.timedelta(minutes=60),
+                        log_func=None) -> Tuple[DatasetQueryStatus, Optional[List[RucioFile]]]:
         '''
         Return the list of files that are in a dataset. Use the local cache if possible, and if not,
         then we run rucio to get the listing (so this can take a while!!).
-        
+
         Arguments
         name              The rucio fully qualified name of the dataset
         maxAge            If None - any local results are returned, and if no results are present a query is started
@@ -82,7 +84,7 @@ class rucio_cache_interface:
         status        Status of the returned results (see DatasetQueryStatus) and below:
         files         Depends on the status:
                           does_not_exist - files will be None, and the dataset was not found on the last query to rucio.
-                          results_valid - files will be a list of all files in the dataset. 
+                          results_valid - files will be a list of all files in the dataset.
                               Empty Dataset: The dataset is empty if the list has len()==0.
                               Dataset with files: The list will have an entry per file
         '''
@@ -91,7 +93,7 @@ class rucio_cache_interface:
         if listing is not None:
             status = DatasetQueryStatus.results_valid if listing.FileList is not None else DatasetQueryStatus.does_not_exist
             if (status is not DatasetQueryStatus.does_not_exist or not ds_age_too_old(listing.Created, maxAgeIfNotSeen)) \
-                and (status is not DatasetQueryStatus.results_valid or not ds_age_too_old(listing.Created, maxAge)):
+                    and (status is not DatasetQueryStatus.results_valid or not ds_age_too_old(listing.Created, maxAge)):
                 return (status, listing.FileList)
 
         # If we are here, we need to run the query against rucio for whatever reason.
@@ -101,7 +103,7 @@ class rucio_cache_interface:
         status = DatasetQueryStatus.results_valid if listing.FileList is not None else DatasetQueryStatus.does_not_exist
         return (status, listing.FileList)
 
-    def _query_rucio(self, ds_name:str, log_func=None) -> None:
+    def _query_rucio(self, ds_name: str, log_func=None) -> None:
         '''
         Run a query against rucio and then save the results.
 
@@ -116,11 +118,11 @@ class rucio_cache_interface:
                 # Cache the result.
                 self._cache_mgr.save_listing(dataset_listing_info(ds_name, r))
         except filelock.Timeout:
-            raise RucioAlreadyBeingDownloaded(f'Cannot query rucio about contents of dataset as someone elase already has the lock for {ds_name}.')
+            raise RucioAlreadyBeingDownloaded(f'Cannot query rucio about contents of dataset as someone else already has the lock for {ds_name}.')
 
     def download_ds(self, ds_name: str,
-            do_download:bool=True,
-            log_func = None) -> Tuple[DatasetQueryStatus, Optional[List[str]]]:
+                    do_download: bool = True,
+                    log_func=None) -> Tuple[DatasetQueryStatus, Optional[List[str]]]:
         '''
         Return the list of files that are in a dataset if they have been downloaded.
         If not, then a download is started.
@@ -135,7 +137,7 @@ class rucio_cache_interface:
             status        Status of the returned results (see DatasetQueryStatus) and below:
             files         Depends on the status:
                             does_not_exist - files will be None, and the dataset was not found on the last query to rucio.
-                            results_valid - files will be a list of all files in the dataset. 
+                            results_valid - files will be a list of all files in the dataset.
                                 Empty Dataset: The dataset is empty if the list has len()==0.
                                 Dataset with files: The list will have an entry per file. The files will be relative to
                                     cache directory, unless prefix is not none - then they will have the prefix added.
@@ -157,7 +159,7 @@ class rucio_cache_interface:
 
         return (DatasetQueryStatus.results_valid, f_list)
 
-    def _rucio_download(self, ds_name:str, log_func) -> None:
+    def _rucio_download(self, ds_name: str, log_func) -> None:
         'Download the files synchronously - this could take a long time'
         # Make sure we are the only ones
         try:
